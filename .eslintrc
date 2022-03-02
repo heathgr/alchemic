@@ -1,0 +1,27 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "import"
+  ],
+  "extends": [
+    "airbnb-typescript/base",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "project": "tsconfig.json"
+  },
+  "rules": {
+    "@typescript-eslint/semi": ["error", "never"],
+    "@typescript-eslint/no-use-before-define": "off",
+    "comma-dangle": ["error", "always-multiline"],
+    "eol-last": ["error", "always"],
+    "no-console": "warn",
+    "no-multiple-empty-lines": ["error", {"max": 2, "maxEOF": 0 }],
+    "quotes": ["error", "single"],
+    "semi": ["error", "never"]
+  }
+}

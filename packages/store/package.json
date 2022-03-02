@@ -1,0 +1,16 @@
+{
+  "name": "@alchemic/store",
+  "version": "0.0.0",
+  "description": "An observable state container.",
+  "main": "./lib/index.js",
+  "files": [
+    "./lib"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "test": "jest"
+  },
+  "author": "Grant Heath",
+  "license": "MIT"
+}
