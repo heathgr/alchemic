@@ -1,22 +1,24 @@
 {
-  "name": "@alchemic/store",
+  "name": "html",
   "version": "0.1.0-1",
-  "description": "An observable state container.",
-  "main": "./lib/index.js",
+  "description": "A function for parsing template strings into HTML elements.",
+  "main": "lib/index.js",
   "files": [
     "lib"
   ],
+  "devDependencies": {},
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --coverage --watch"
   },
-  "author": "Grant Heath",
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/heathgr/alchemic.git"
   },
+  "author": "Grant Heath",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/heathgr/alchemic/issues"
   },
