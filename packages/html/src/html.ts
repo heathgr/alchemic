@@ -10,14 +10,16 @@ const findTag = ({ elementStack, templateString }: HTMLParserContext): HTMLParse
     const matchIndex = match.index || 0
     const preMatchString = templateString.substring(0, matchIndex).trim()
     const postMatchString = templateString.substring(matchIndex + fullMatch.length).trim()
+    const activeElement = elementStack[elementStack.length - 1]
 
-    if (preMatchString) elementStack[elementStack.length - 1].appendChild(document.createTextNode(preMatchString))
+    if (preMatchString) activeElement.appendChild(document.createTextNode(preMatchString))
     
     if (closing) {
-      // TODO make sure there are enough elements to the array to perform the closing operation
-      // TODO make sure opening and closing tagNames match
-      elementStack[elementStack.length - 2].appendChild(elementStack[elementStack.length - 1])
-      elementStack.pop()
+      if (elementStack.length > 1) {
+        elementStack[elementStack.length - 2].appendChild(activeElement)
+        elementStack.pop()
+      }
+      if (tagName.toLowerCase() !== activeElement.tagName.toLowerCase()) throw new Error(`Invalid HTML: opening tag ${activeElement.tagName} closing tag ${tagName}`)
     } else {
       elementStack.push(document.createElement(tagName))
     }
@@ -25,21 +27,23 @@ const findTag = ({ elementStack, templateString }: HTMLParserContext): HTMLParse
     return findTag({ elementStack, templateString: postMatchString })
   }
 
-  console.log('no match: ', templateString)
   return { elementStack, templateString }
 }
 
 const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   let parsingContext: HTMLParserContext = {
-    elementStack: [document.createDocumentFragment()],
+    elementStack: [],
     templateString: '',
   }
 
   for (let i = 0; i < templateStrings.length; i++) {
-    parsingContext = findTag({ ...parsingContext, templateString: templateStrings[i] })
+    parsingContext = findTag({
+      ...parsingContext,
+      templateString: parsingContext.templateString + templateStrings[i] + (templateExpressions[i] || ''),
+    })
   }
 
-  return parsingContext.elementStack[0] || document.createElement('div')
+  return parsingContext.elementStack[0] || document.createDocumentFragment()
 }
 
 export default html

@@ -7,6 +7,6 @@ export type HTMLParsingElement = HTMLElement | DocumentFragment
 export type HTMLParser = (templateStrings: TemplateStringsArray, ...templateExpressions: TemplateExpression[]) => HTMLParsingElement
 
 export interface HTMLParserContext {
-  elementStack: HTMLParsingElement[],
+  elementStack: HTMLElement[],
   templateString: string,
 }
