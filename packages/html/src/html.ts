@@ -1,16 +1,16 @@
-import { HTMLParser, HTMLParserContext } from './html.types'
+import { HTMLParser, HTMLParserContext, HTMLParserMathGroups } from './html.types'
 
-const tagMatcher = /(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *>)/
+const tagMatcher = /(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[a-zA-Z ="'-]*) *>)/
 
-const findTag = ({ elementStack, templateString }: HTMLParserContext): HTMLParserContext => {
+const parseElements = ({ elementStack, templateString }: HTMLParserContext): HTMLParserContext => {
   const match = templateString.match(tagMatcher)
 
   if (match) {
-    const { fullMatch, tagName, closing  } = match.groups as { fullMatch: string, tagName: string, closing: string }
+    const { fullMatch, tagName, closing, attributes } = match.groups as HTMLParserMathGroups
     const matchIndex = match.index || 0
     const preMatchString = templateString.substring(0, matchIndex).trim()
     const postMatchString = templateString.substring(matchIndex + fullMatch.length).trim()
-    const activeElement = elementStack[elementStack.length - 1]
+    let activeElement = elementStack[elementStack.length - 1]
 
     if (preMatchString) activeElement.appendChild(document.createTextNode(preMatchString))
     
@@ -19,12 +19,23 @@ const findTag = ({ elementStack, templateString }: HTMLParserContext): HTMLParse
         elementStack[elementStack.length - 2].appendChild(activeElement)
         elementStack.pop()
       }
-      if (tagName.toLowerCase() !== activeElement.tagName.toLowerCase()) throw new Error(`Invalid HTML: opening tag ${activeElement.tagName} closing tag ${tagName}`)
+      if (tagName?.toLowerCase() !== activeElement.tagName.toLowerCase()) throw new Error(`Invalid HTML: opening tag ${activeElement.tagName} closing tag ${tagName}`)
     } else {
-      elementStack.push(document.createElement(tagName))
+      elementStack.push(document.createElement(tagName as keyof HTMLElementTagNameMap))
+      activeElement = elementStack[elementStack.length - 1]
+
+      if (attributes) {
+        attributes.split(' ').forEach(a => {
+          const [rawAttribute, rawValue] = a.split('=')
+          const attribute = rawAttribute.trim()
+          const value = rawValue.replace(/['"]/g, '')
+
+          activeElement.setAttribute(attribute, value)
+        })
+      }
     }
   
-    return findTag({ elementStack, templateString: postMatchString })
+    return parseElements({ elementStack, templateString: postMatchString })
   }
 
   return { elementStack, templateString }
@@ -37,7 +48,7 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   }
 
   for (let i = 0; i < templateStrings.length; i++) {
-    parsingContext = findTag({
+    parsingContext = parseElements({
       ...parsingContext,
       templateString: parsingContext.templateString + templateStrings[i] + (templateExpressions[i] || ''),
     })

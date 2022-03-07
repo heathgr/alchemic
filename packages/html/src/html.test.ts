@@ -86,10 +86,10 @@ describe('html', () => {
     {
       theFunction: 'Should parse tag attributes that have expressions.',
       actual: html`
-        <div class='test-class' id=${'my-id'}>Test Content</div>
+        <div class='some-class' id=${'my-id-from-expression'}>Test Content</div>
       `,
       expected: `
-        <div class="test-class" id="my-id">Test Content</div>
+        <div class="some-class" id="my-id-from-expression">Test Content</div>
       `,
     },
   ]
