@@ -74,6 +74,26 @@ describe('html', () => {
     },
 
     {
+      theFunction: 'Should parse tags defined by expressions.',
+      actual: html`
+        <div>
+          <${'h1'}>I am a header!!!</${'h1'}>
+          <p>I am a paragraph.</p>
+        </div>
+      `,
+      expected: `
+        <div>
+          <h1>I am a header!!!</h1>
+          <p>I am a paragraph.</p>
+        </div>
+      `,
+    },
+
+    // self closing tags
+    // conditionals
+    // nested templates
+
+    {
       theFunction: 'Should parse tag attributes.',
       actual: html`
         <div class='test-class' id='my-id'>Test Content</div>
@@ -86,10 +106,27 @@ describe('html', () => {
     {
       theFunction: 'Should parse tag attributes that have expressions.',
       actual: html`
-        <div class='some-class' id=${'my-id-from-expression'}>Test Content</div>
+        <div class='some-class-${2 + 10}' id="${'my-id-from-expression'}">Test Content</div>
       `,
       expected: `
-        <div class="some-class" id="my-id-from-expression">Test Content</div>
+        <div class="some-class-12" id="my-id-from-expression">Test Content</div>
+      `,
+    },
+
+    {
+      theFunction: 'Should sanitize template expressions to prevent html injection.',
+      actual: html`
+        <div>
+          <h1>Do Not Get Hacked!!!</h1>
+          ${'<img src="x" onerror="alert(\'XSS Attack\')"></img>'}
+          <img src=x onerror="alert('XSS Attack')"></img>
+        </div>
+      `,
+      expected: `
+      <div>
+        <h1>Do Not Get Hacked!!!</h1>
+        gt;img src="x" onerror="alert('XSS Attack')"></img>
+      </div>
       `,
     },
   ]
@@ -105,6 +142,10 @@ describe('html', () => {
     },
   )
 
+  // event handlers
+
+  // more malformed tag tests
+  // malformed attributes test
   it('Should throw an error if closing and opening tags do not match.', () => {    
     expect(() => html`<div><h1></div></h1>`).toThrow()
   })
