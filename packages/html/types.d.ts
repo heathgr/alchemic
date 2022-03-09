@@ -1,3 +1,3 @@
 declare module 'diffable-html' {
-  export default (html: string): string
+  export default (html: string): string => html
 }

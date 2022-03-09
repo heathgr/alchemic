@@ -1,3 +1,4 @@
+import { sanitizeHtmlExpression } from '@alchemic/utilities'
 import { HTMLParser, HTMLParserContext, HTMLParserMathGroups } from './html.types'
 
 const parseAttributes = (attributes: string, element: HTMLElement) => {
@@ -57,9 +58,11 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   }
 
   for (let i = 0; i < templateStrings.length; i++) {
+    const parsedExpression = templateExpressions[i] ? sanitizeHtmlExpression(String(templateExpressions[i])) : ''
+
     parsingContext = parseElements({
       ...parsingContext,
-      templateString: parsingContext.templateString + templateStrings[i] + (templateExpressions[i] || ''),
+      templateString: parsingContext.templateString + templateStrings[i] + parsedExpression,
     })
   }
 

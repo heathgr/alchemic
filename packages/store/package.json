@@ -6,10 +6,12 @@
   "files": [
     "lib"
   ],
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --coverage --watch"
   },
   "author": "Grant Heath",
   "license": "MIT",

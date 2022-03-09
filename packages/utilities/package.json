@@ -1,11 +1,10 @@
 {
-  "name": "@alchemic/html",
+  "name": "@alchemic/utilities",
   "version": "0.1.0-1",
-  "description": "A function for parsing template strings into HTML elements.",
+  "description": "",
   "main": "lib/index.js",
-  "files": [
-    "lib"
-  ],
+  "devDependencies": {},
+  "files": [ "lib" ],
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -22,8 +21,5 @@
   "bugs": {
     "url": "https://github.com/heathgr/alchemic/issues"
   },
-  "homepage": "https://github.com/heathgr/alchemic#readme",
-  "dependencies": {
-    "@alchemic/utilities": "^0.1.0-1"
-  }
+  "homepage": "https://github.com/heathgr/alchemic#readme"
 }

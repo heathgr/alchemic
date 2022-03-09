@@ -119,13 +119,12 @@ describe('html', () => {
         <div>
           <h1>Do Not Get Hacked!!!</h1>
           ${'<img src="x" onerror="alert(\'XSS Attack\')"></img>'}
-          <img src=x onerror="alert('XSS Attack')"></img>
         </div>
       `,
       expected: `
       <div>
         <h1>Do Not Get Hacked!!!</h1>
-        gt;img src="x" onerror="alert('XSS Attack')"></img>
+        &amp;#60;img src&amp;#61;"x" onerror&amp;#61;"alert&amp;#40;'XSS Attack'&amp;#41;"&amp;#62;&amp;#60;/img&amp;#62;
       </div>
       `,
     },
