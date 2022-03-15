@@ -3,6 +3,10 @@ import html from './html'
 import format from 'diffable-html'
 
 describe('html', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
   const testCases = [
     {
       theFunction: 'Should parse simple html elements with no attributes.',
@@ -54,26 +58,6 @@ describe('html', () => {
     },
 
     {
-      theFunction: 'Should parse number template expressions.',
-      actual: html`
-        <div>
-          <h1>First Special Number!</h1>
-          <p>Special Number ${6 * 7}</p>
-          <h1>Second Special Number!</h1>
-          <p>Special Number ${12 - 4}</p>
-        </div>
-      `,
-      expected: `
-        <div>
-          <h1>First Special Number!</h1>
-          <p>Special Number 42</p>
-          <h1>Second Special Number!</h1>
-          <p>Special Number 8</p>
-        </div>
-      `,
-    },
-
-    {
       theFunction: 'Should parse tags defined by expressions.',
       actual: html`
         <div>
@@ -89,12 +73,93 @@ describe('html', () => {
       `,
     },
 
-    // self closing tags
-    // conditionals
-    // nested templates
+    {
+      theFunction: 'Should parse self closing tags.',
+      actual: html`
+        <div>
+          <div/>
+          <img/>
+        </div>
+      `,
+      expected: `
+        <div>
+          <div></div>
+          <img></img>
+        </div>
+      `,
+    },
 
     {
-      theFunction: 'Should parse tag attributes.',
+      theFunction: 'Should parse only one self closing tag.',
+      actual: html`
+        <div />
+      `,
+      expected: `
+        <div></div>
+      `,
+    },
+
+    {
+      theFunction: 'Should ignore elements that are part of a false conditional expressions.',
+      actual: html`
+        <div>
+          ${ false && html`<h1>You will not see me!</h1>`}
+        </div>
+      `,
+      expected: `
+        <div></div>
+      `,
+    },
+
+    {
+      theFunction: 'Should not ignore elements that are part of a true conditional expressions.',
+      actual: html`
+        <div>
+          ${ true && html`<h1>You will see me!</h1>`}
+        </div>
+      `,
+      expected: `
+        <div>
+          <h1>You will see me!</h1>
+        </div>
+      `,
+    },
+
+    {
+      theFunction: 'Should parse nested templates.',
+      actual: html`
+        <section>
+          ${html`<h1>Nested Header!</h1>`}
+          ${html`<p>Nested Paragraph!</p>`}
+        </section>
+      `,
+      expected: `
+        <section>
+          <h1>Nested Header!</h1>
+          <p>Nested Paragraph!</p>
+        </section>
+      `,
+    },
+
+    {
+      theFunction: 'Should ignore invalid objects.',
+      actual: html`
+        <section>
+          ${html`<h1>Nested Header!</h1>`}
+          ${{ obj: 'invalid' } as unknown as HTMLElement}
+        </section>
+      `,
+      expected: `
+        <section>
+          <h1>Nested Header!</h1>
+        </section>
+      `,
+    },
+
+    // array expressions
+
+    {
+      theFunction: 'Should parse attributes.',
       actual: html`
         <div class='test-class' id='my-id'>Test Content</div>
       `,
@@ -104,7 +169,7 @@ describe('html', () => {
     },
 
     {
-      theFunction: 'Should parse tag attributes that have expressions.',
+      theFunction: 'Should parse attributes that have expressions.',
       actual: html`
         <div class='some-class-${2 + 10}' id="${'my-id-from-expression'}">Test Content</div>
       `,
@@ -136,7 +201,6 @@ describe('html', () => {
         document.body.appendChild(actual)
 
         expect(format(document.body.innerHTML)).toBe(format(expected))
-        document.body.innerHTML = ''
       })
     },
   )
