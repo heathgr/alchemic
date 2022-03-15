@@ -5,7 +5,7 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   const elementStack: HTMLElement[] = []
   let activeExpression: TemplateExpression = undefined
   let activeString = ''
-  // TODO move active element pointer up here?
+  let activeElement = elementStack[elementStack.length - 1] // TODO use a pointer to handle active element?
 
   const parseAttributes = (attributes: string, element: HTMLElement) => {
     // TODO make attributes name matcher adhere to HTML5 standard
@@ -45,6 +45,14 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
     }
   }
 
+  const handleClosingTag = () => {
+    if (elementStack.length > 1) {
+      elementStack[elementStack.length - 2].appendChild(activeElement)
+      elementStack.pop()
+      activeElement = elementStack[elementStack.length - 1]
+    }
+  }
+
   const parseElements = () => {
     const tagMatch = activeString.match(/(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[()a-zA-Z0-9 ="'-]*) *(?<isSelfClosing>\/?)>)/)
     
@@ -53,30 +61,20 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
       const matchIndex = tagMatch.index || 0
       const preMatchString = activeString.substring(0, matchIndex).trim()
       const postMatchString = activeString.substring(matchIndex + fullMatch.length)
-      let activeElement = elementStack[elementStack.length - 1] // TODO use a pointer to handle active element?
   
       if (preMatchString) activeElement.appendChild(document.createTextNode(preMatchString))
       
       if (closing) {
         if (tagName?.toLowerCase() !== activeElement.tagName.toLowerCase())
           throw new Error(`Invalid HTML: opening tag ${activeElement.tagName.toLocaleLowerCase()} does not match closing tag ${tagName?.toLocaleLowerCase()}`)
-        if (elementStack.length > 1) {
-          elementStack[elementStack.length - 2].appendChild(activeElement)
-          elementStack.pop()
-          activeElement = elementStack[elementStack.length - 1]
-        }
+        handleClosingTag()
       } else {
         elementStack.push(document.createElement(tagName as keyof HTMLElementTagNameMap))
         activeElement = elementStack[elementStack.length - 1]
   
         if (attributes) parseAttributes(attributes, activeElement)
         if (isSelfClosing) {
-          if (elementStack.length > 1) {
-            // TODO this is duplicate logic clean it up
-            elementStack[elementStack.length - 2].appendChild(activeElement)
-            elementStack.pop()
-            activeElement = elementStack[elementStack.length - 1]
-          }
+          handleClosingTag()
         }
       }
       
