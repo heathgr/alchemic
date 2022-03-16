@@ -126,7 +126,7 @@ describe('html', () => {
     },
 
     {
-      theFunction: 'Should parse nested templates.',
+      theFunction: 'Should parse template expressions.',
       actual: html`
         <section>
           ${html`<h1>Nested Header!</h1>`}
@@ -142,21 +142,79 @@ describe('html', () => {
     },
 
     {
+      theFunction: 'Should parse template expressions with malformed html.',
+      actual: html`
+        <main>
+          <div class= "stuff" ${html`<p>test</p>`}
+        </main>
+      `,
+      expected: `
+        <main>
+          &lt;div class= "stuff"
+          <p>test</p>
+        </main>
+      `,
+    },
+
+    {
       theFunction: 'Should ignore invalid objects.',
       actual: html`
         <section>
-          ${html`<h1>Nested Header!</h1>`}
+          ${html`<h1>Some Header!</h1>`}
           ${{ obj: 'invalid' } as unknown as HTMLElement}
         </section>
       `,
       expected: `
         <section>
-          <h1>Nested Header!</h1>
+          <h1>Some Header!</h1>
         </section>
       `,
     },
 
-    // array expressions
+    {
+      theFunction: 'Should parse an array of template expressions.',
+      actual: html`
+        <ul>
+          ${['one', 'two', 'three'].map(x => html`<li>${x}</li>`)}
+        </ul>
+      `,
+      expected: `
+        <ul>
+          <li>one</li>
+          <li>two</li>
+          <li>three</li>
+        </ul>
+      `,
+    },
+
+    {
+      theFunction: 'Should parse an array of string expressions.',
+      actual: html`
+        <p>
+          ${['Hello ', 'there ', ':)']}
+        </p>
+      `,
+      expected: `
+        <p>
+          Hello there :&amp;#41;
+        </p>
+      `,
+    },
+
+    {
+      theFunction: 'Should parse an array of mixed type expressions.',
+      actual: html`
+        <div>
+          ${['Hello ', ['there every ', 1], html`<p class="bold">I like turtles.</p>`]}
+        </div>
+      `,
+      expected: `
+        <div>
+          Hello there every 1
+          <p class="bold">I like turtles.</p>
+        </div>
+      `,
+    },
 
     {
       theFunction: 'Should parse attributes.',
