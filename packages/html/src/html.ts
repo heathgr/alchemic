@@ -1,4 +1,4 @@
-import { sanitizeHtmlExpression } from '@alchemic/utilities'
+import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
 import { HTMLParser, HTMLParserMathGroups, TemplateExpression } from './html.types'
 
 const html: HTMLParser = (templateStrings, ...templateExpressions) => {
@@ -8,7 +8,7 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
 
   const parseAttributes = (attributes: string) => {
     // TODO make attribute name matcher adhere to HTML5 standard
-    const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[a-zA-z0-9]+) *)/)
+    const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[-a-zA-z0-9]+) *)/)
     const attributeValueMatch = attributes.match(/(?<fullMatch> *= *(?<opening>['"])(?<value>[^=]*)\k<opening>)/)
     const name = attributeNameMatch?.groups?.name
     const value = attributeValueMatch?.groups?.value
@@ -26,11 +26,11 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   const parseExpression = (expression: TemplateExpression) => {
     switch (typeof expression) {
       case 'string': {
-        activeString = activeString + sanitizeHtmlExpression(expression)
+        activeString += sanitizeHtmlExpression(expression)
         return
       }
       case 'number': {
-        activeString = activeString + expression
+        activeString += expression
         return
       }
       case 'object': {
@@ -48,6 +48,20 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
           }
         }
   
+        return
+      }
+      case 'function': {
+        const eventHandlerMatch = activeString.match(/(?<event>on[a-z]+) *= *$/)
+
+        if (eventHandlerMatch) {
+          const event = eventHandlerMatch.groups?.event as EventType
+          
+          if (isEvent(event)) {
+            elementStack[activeElement][event] = expression
+            activeString = activeString.substring(0, eventHandlerMatch.index)
+          }
+        }
+
         return
       }
       default: return
