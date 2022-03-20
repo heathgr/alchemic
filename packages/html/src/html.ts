@@ -1,8 +1,8 @@
 import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
-import { HTMLParser, HTMLParserMathGroups, TemplateExpression } from './html.types'
+import { TemplateParser, TemplateTagMatcherGroups, TemplateExpression } from './html.types'
 
-const html: HTMLParser = (templateStrings, ...templateExpressions) => {
-  const elementStack: HTMLElement[] = []
+const html: TemplateParser = (templateStrings, ...templateExpressions) => {
+  const elementStack: { element: HTMLElement, isClosed: boolean }[] = []
   let activeString = ''
   let activeElement = -1
 
@@ -13,7 +13,7 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
     const name = attributeNameMatch?.groups?.name
     const value = attributeValueMatch?.groups?.value
   
-    if (name) elementStack[activeElement].setAttribute(name, value || name)
+    if (name) elementStack[activeElement].element.setAttribute(name, value || name)
     else return
   
     const theRest = attributes.substring(
@@ -36,10 +36,10 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
       case 'object': {
         if (expression instanceof HTMLElement) {
           if (activeString) {
-            elementStack[activeElement].appendChild(document.createTextNode(activeString))
+            elementStack[activeElement].element.appendChild(document.createTextNode(activeString))
             activeString = ''
           }
-          elementStack[elementStack.length - 1].appendChild(expression)
+          elementStack[elementStack.length - 1].element.appendChild(expression)
         }
 
         if (Array.isArray(expression)) {
@@ -57,7 +57,7 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
           const event = eventHandlerMatch.groups?.event as EventType
           
           if (isEvent(event)) {
-            elementStack[activeElement][event] = expression
+            elementStack[activeElement].element[event] = expression
             activeString = activeString.substring(0, eventHandlerMatch.index)
           }
         }
@@ -69,10 +69,11 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   }
 
   const handleClosingTag = () => {
-    if (activeElement) {
-      elementStack[activeElement - 1].appendChild(elementStack[activeElement])
+    elementStack[activeElement].isClosed = true
+    if (activeElement && !elementStack[activeElement - 1].isClosed) {
+      elementStack[activeElement - 1].element.appendChild(elementStack[activeElement].element)
       elementStack.pop()
-      activeElement --
+      activeElement = elementStack.length - 1
     }
   }
 
@@ -80,20 +81,20 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
     const tagMatch = activeString.match(/(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[()a-zA-Z0-9 ="'-]*) *(?<isSelfClosing>\/?)>)/)
     
     if (tagMatch) {
-      const { fullMatch, tagName, closing, attributes, isSelfClosing } = tagMatch.groups as HTMLParserMathGroups
+      const { fullMatch, tagName, closing, attributes, isSelfClosing } = tagMatch.groups as TemplateTagMatcherGroups
       const matchIndex = tagMatch.index || 0
       const preMatchString = activeString.substring(0, matchIndex).trim()
       const postMatchString = activeString.substring(matchIndex + fullMatch.length)
   
-      if (preMatchString) elementStack[activeElement].appendChild(document.createTextNode(preMatchString))
+      if (preMatchString) elementStack[activeElement].element.appendChild(document.createTextNode(preMatchString))
       
       if (closing) {
-        if (tagName?.toLowerCase() !== elementStack[activeElement].tagName.toLowerCase())
-          throw new Error(`Invalid HTML: opening tag ${elementStack[activeElement].tagName.toLocaleLowerCase()} does not match closing tag ${tagName?.toLocaleLowerCase()}`)
+        if (tagName?.toLowerCase() !== elementStack[activeElement]?.element?.tagName?.toLowerCase())
+          throw new Error('Invalid HTML: There is a mismatch between opening and closing tags.')
         handleClosingTag()
       } else {
-        elementStack.push(document.createElement(tagName as keyof HTMLElementTagNameMap))
-        activeElement ++
+        elementStack.push({ element: document.createElement(tagName as keyof HTMLElementTagNameMap), isClosed: false })
+        activeElement = elementStack.length - 1
   
         if (attributes) parseAttributes(attributes)
         if (isSelfClosing) {
@@ -115,7 +116,8 @@ const html: HTMLParser = (templateStrings, ...templateExpressions) => {
   }
 
   // TODO handle templates with no root element
-  return elementStack[0] || document.createDocumentFragment()
+  if (elementStack.length > 1) throw new Error('It is broke!!')
+  return elementStack[0] ? elementStack[0].element : document.createDocumentFragment()
 }
 
 export default html

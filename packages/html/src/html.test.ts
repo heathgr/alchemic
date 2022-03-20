@@ -252,20 +252,6 @@ describe('html', () => {
         </div>
         `,
       },
-
-      {
-        theFunction: 'Should parse templates with no single root.',
-        actual: html`
-          <div>one</div>
-          <div>two</div>
-          <div>three</div>
-        `,
-        expected: `
-          <div>one</div>
-          <div>two</div>
-          <div>three</div>
-        `,
-      },
     ]
     
     testCases.forEach(
@@ -280,6 +266,7 @@ describe('html', () => {
   })
 
   describe('Event handling.', () => {
+    // TODO more detailed event handler tests.
     it('Should handle onclick events.', () => {
       const eventHandler = jest.fn()
       const template = html`
@@ -299,10 +286,26 @@ describe('html', () => {
   })
 
   describe('Error Handling.', () => {
-    // more malformed tag tests
     // malformed attributes test
     it('Should throw an error if closing and opening tags do not match.', () => {    
-      expect(() => html`<div><h1></div></h1>`).toThrow()
+      expect(() => html`<div><h1></div></h1>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
+    })
+
+    // TODO this feature will be supported in the future.
+    it('Should throw an error if there is more than one root element.', () => {    
+      expect(() => html`<div></div><h1></h1>`).toThrowError('It is broke!!')
+    })
+
+    it('Should throw an error if there are unclosed tags.', () => {    
+      expect(() => html`<main><div><h1></main>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
+    })
+
+    it('Should throw an error if there are unclosed tags.', () => {    
+      expect(() => html`<main><div><h1></main>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
+    })
+
+    it('Should throw an error if there is a closing tag with no open tag.', () => {    
+      expect(() => html`</main><h1></h1>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
     })
   })
 })
