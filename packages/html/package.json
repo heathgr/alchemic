@@ -1,6 +1,6 @@
 {
   "name": "@alchemic/html",
-  "version": "0.1.0-1",
+  "version": "0.1.0",
   "description": "A function for parsing template strings into HTML elements.",
   "main": "lib/index.js",
   "files": [
@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/heathgr/alchemic#readme",
   "dependencies": {
-    "@alchemic/utilities": "^0.1.0-1"
+    "@alchemic/utilities": "^0.1.0"
   }
 }

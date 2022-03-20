@@ -1,14 +1,8 @@
 {
-  "name": "alchemic",
-  "version": "0.1.0-1",
+  "name": "alchemic-root",
+  "version": "0.1.0",
   "description": "",
   "main": "./lib/index.js",
-  "files": [
-    "lib"
-  ],
-  "scripts": {
-    "build": "tsc"
-  },
   "author": "Grant Heath",
   "license": "MIT",
   "workspaces": [
