@@ -8,7 +8,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
 
   const parseAttributes = (attributes: string) => {
     // TODO make attribute name matcher adhere to HTML5 standard
-    const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[-a-zA-z0-9]+) *)/)
+    const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[-a-zA-z0-9:]+) *)/)
     const attributeValueMatch = attributes.match(/(?<fullMatch> *= *(?<opening>['"])(?<value>[^=]*)\k<opening>)/)
     const name = attributeNameMatch?.groups?.name
     const value = attributeValueMatch?.groups?.value
@@ -78,14 +78,14 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   }
 
   const parseElements = () => {
-    const tagMatch = activeString.match(/(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[()a-zA-Z0-9 ="'-]*) *(?<isSelfClosing>\/?)>)/)
+    const tagMatch = activeString.match(/(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[/:;.()a-zA-Z0-9 ="'-]*) *\/?>)/)
     
     if (tagMatch) {
-      const { fullMatch, tagName, closing, attributes, isSelfClosing } = tagMatch.groups as TemplateTagMatcherGroups
+      const { fullMatch, tagName, closing, attributes } = tagMatch.groups as TemplateTagMatcherGroups
       const matchIndex = tagMatch.index || 0
       const preMatchString = activeString.substring(0, matchIndex).trim()
       const postMatchString = activeString.substring(matchIndex + fullMatch.length)
-  
+      
       if (preMatchString) elementStack[activeElement].element.appendChild(document.createTextNode(preMatchString))
       
       if (closing) {
@@ -97,7 +97,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
         activeElement = elementStack.length - 1
   
         if (attributes) parseAttributes(attributes)
-        if (isSelfClosing) {
+        if (fullMatch.match(/\/>$/)) {
           handleClosingTag()
         }
       }
@@ -116,8 +116,9 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   }
 
   // TODO handle templates with no root element
-  if (elementStack.length > 1) throw new Error('It is broke!!')
-  return elementStack[0] ? elementStack[0].element : document.createDocumentFragment()
+  // TODO write better error message
+  if (elementStack.length !== 1) throw new Error('It is broke!!')
+  return elementStack[0].element
 }
 
 export default html
