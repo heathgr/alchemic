@@ -1,0 +1,31 @@
+{
+  "name": "@alchemic/render",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --coverage --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heathgr/alchemic.git"
+  },
+  "author": "Grant Heath",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heathgr/alchemic/issues"
+  },
+  "homepage": "https://github.com/heathgr/alchemic#readme",
+  "dependencies": {
+    "@alchemic/utilities": "^0.1.0",
+    "@alchemic/html": "^0.1.0",
+    "@alchemic/store": "^0.1.0"
+  }
+}

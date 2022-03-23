@@ -6,7 +6,11 @@
   "author": "Grant Heath",
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/utilities",
+    "packages/render",
+    "packages/store",
+    "packages/html",
+    "packages/main"
   ],
   "devDependencies": {
     "@babel/preset-env": "^7.16.11",
