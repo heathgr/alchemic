@@ -297,6 +297,13 @@ describe('html', () => {
 
       expect(eventHandler).toHaveBeenCalledTimes(1)
     })
+
+    it('should not break!!', () => {
+      const clickHandler = jest.fn()
+      const update = html`<button onclick=${clickHandler}>click me</button>`
+
+
+    })
   })
 
   describe('Error Handling.', () => {

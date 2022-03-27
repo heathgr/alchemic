@@ -3,6 +3,7 @@ import { TemplateParser, TemplateTagMatcherGroups, TemplateExpression } from './
 
 const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const elementStack: { element: HTMLElement, isClosed: boolean }[] = []
+  let eventStack: { event: EventType, handler: (...args: any) => any }[] = []
   let activeString = ''
   let activeElement = -1
 
@@ -57,7 +58,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
           const event = eventHandlerMatch.groups?.event as EventType
           
           if (isEvent(event)) {
-            elementStack[activeElement].element[event] = expression
+            eventStack.push({ event, handler: expression })
             activeString = activeString.substring(0, eventHandlerMatch.index)
           }
         }
@@ -70,6 +71,13 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
 
   const handleClosingTag = () => {
     elementStack[activeElement].isClosed = true
+    
+    for (let i = 0; i < eventStack.length; i++) {
+      elementStack[activeElement].element[eventStack[i].event] = eventStack[i].handler
+    }
+
+    eventStack = []
+
     if (activeElement && !elementStack[activeElement - 1].isClosed) {
       elementStack[activeElement - 1].element.appendChild(elementStack[activeElement].element)
       elementStack.pop()
@@ -97,7 +105,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
         activeElement = elementStack.length - 1
   
         if (attributes) parseAttributes(attributes)
-        if (fullMatch.match(/\/>$/)) {
+        if (fullMatch.match(/\/>$/)) {  //TODO see if self closing tag can be captured in regex capture group
           handleClosingTag()
         }
       }
