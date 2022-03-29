@@ -284,25 +284,16 @@ describe('html', () => {
     it('Should handle onclick events.', () => {
       const eventHandler = jest.fn()
       const template = html`
-        <div>
-          <button onclick=${eventHandler} data-testid="test-button">Click Me!!!</button>
-        </div>
+          <button onclick=${eventHandler}>aa</button>
       ` as HTMLElement
 
       document.body.appendChild(template)
       
-      const testButton = document.querySelector('[data-testid="test-button"]') as HTMLElement
+      const testButton = document.querySelector('button') as HTMLElement
 
       testButton.click()
 
       expect(eventHandler).toHaveBeenCalledTimes(1)
-    })
-
-    it('should not break!!', () => {
-      const clickHandler = jest.fn()
-      const update = html`<button onclick=${clickHandler}>click me</button>`
-
-
     })
   })
 

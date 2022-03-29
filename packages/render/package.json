@@ -24,8 +24,9 @@
   },
   "homepage": "https://github.com/heathgr/alchemic#readme",
   "dependencies": {
-    "@alchemic/utilities": "^0.1.0",
-    "@alchemic/html": "^0.1.0",
-    "@alchemic/store": "^0.1.0"
+    "@alchemic/utilities": "^0.1.0"
+  },
+  "devDependencies": {
+    "@alchemic/html": "0.1.0"
   }
 }

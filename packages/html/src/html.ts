@@ -1,6 +1,7 @@
 import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
 import { TemplateParser, TemplateTagMatcherGroups, TemplateExpression } from './html.types'
 
+// TODO support comments
 const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const elementStack: { element: HTMLElement, isClosed: boolean }[] = []
   let eventStack: { event: EventType, handler: (...args: any) => any }[] = []
