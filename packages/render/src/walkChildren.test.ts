@@ -34,13 +34,13 @@ describe('walkChildren', () => {
     expect(walkSpy).toHaveBeenCalledWith(childA, childB)
   })
 
-  it('Should replace mutated nodes that different than the existing child node.', () => {
-    const update = html`<main><div id="test">updated!!</div></main>`
-    const existing = html`<main><div id="test">existing!</div></main>`
+  it('Should replace mutated nodes that are different than the existing child node.', () => {
+    const update = html`<main><p>hello world</p></main>`
+    const existing = html`<main><div>hello world</div></main>`
     
     walkChildren(update, existing)
 
-    expect(existing.outerHTML).toBe('<main><div id="test">updated!!</div></main>')
+    expect(existing.outerHTML).toBe('<main><p>hello world</p></main>')
   })
 
   it('Should reorder existing child nodes to match the update node.', () => {

@@ -15,12 +15,7 @@ export default (updateNode: HTMLElement, existingNode: HTMLElement) => {
 
   if (updateNodeType === NodeTypes.TEXT || updateNodeType === NodeTypes.COMMENT) {
     if (existingNode.nodeValue !== updateNode.nodeValue) {
-      console.log('wft: ', existingNode.nodeValue, ':', updateNode.nodeValue)
-      const updateValue = updateNode.nodeValue
-      
-      console.log('uv: ', updateValue)
-      existingNode.nodeValue = updateValue // updateNode.nodeValue
-      console.log('changed: ', existingNode.nodeValue)
+      existingNode.nodeValue = updateNode.nodeValue
     }
   }
 

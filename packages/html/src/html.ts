@@ -2,6 +2,8 @@ import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
 import { TemplateParser, TemplateTagMatcherGroups, TemplateExpression } from './html.types'
 
 // TODO support comments
+// TODO support null attribute values
+// TODO support namespaced attributes
 const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const elementStack: { element: HTMLElement, isClosed: boolean }[] = []
   let eventStack: { event: EventType, handler: (...args: any) => any }[] = []
@@ -10,6 +12,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
 
   const parseAttributes = (attributes: string) => {
     // TODO make attribute name matcher adhere to HTML5 standard
+    // TODO better support for boolean attributes
     const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[-a-zA-z0-9:]+) *)/)
     const attributeValueMatch = attributes.match(/(?<fullMatch> *= *(?<opening>['"])(?<value>[^=]*)\k<opening>)/)
     const name = attributeNameMatch?.groups?.name
