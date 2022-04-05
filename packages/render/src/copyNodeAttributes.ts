@@ -3,8 +3,6 @@ export default (updateNode: HTMLElement, existingNode: HTMLElement) => {
   const updateAttrs = updateNode.attributes
 
   for (let i = updateAttrs.length - 1; i >= 0; --i) {
-    // TODO declare these variables outside of loop for performance?
-    // see nanohtml implementation
     const attr = updateAttrs[i]
     const attrNamespaceURI = attr.namespaceURI
     const attrValue = attr.value

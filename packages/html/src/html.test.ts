@@ -2,7 +2,6 @@
 import html from './html'
 import format from 'diffable-html'
 
-// TODO test and make sure inline styles will be supported
 describe('html', () => {
   describe('Template Parsing.', () => {
     afterEach(() => {
@@ -11,7 +10,7 @@ describe('html', () => {
   
     const testCases = [
       {
-        theFunction: 'Should parse simple html elements with no attributes.',
+        theSubject: 'Should parse simple html elements with no attributes.',
         template: () => html`
         <div>
           <h1>Header</h1>
@@ -26,17 +25,17 @@ describe('html', () => {
         </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse a single element.',
+        theSubject: 'Should parse a single element.',
         template: () => html`
           <div></div>
         `,
         expected: '<div></div>',
       },
-  
+      
       {
-        theFunction: 'Should parse number template expressions.',
+        theSubject: 'Should parse number template expressions.',
         template: () => html`
           <div>
             <h1>First Special Number!</h1>
@@ -54,9 +53,9 @@ describe('html', () => {
           </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse tags defined by expressions.',
+        theSubject: 'Should parse tags defined by expressions.',
         template: () => html`
           <div>
             <${'h1'}>I am a header!!!</${'h1'}>
@@ -70,9 +69,9 @@ describe('html', () => {
           </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse self closing tags.',
+        theSubject: 'Should parse self closing tags.',
         template: () => html`
           <div>
             <div/>
@@ -86,9 +85,9 @@ describe('html', () => {
           </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse only one self closing tag.',
+        theSubject: 'Should parse only one self closing tag.',
         template: () => html`
           <div />
         `,
@@ -96,9 +95,9 @@ describe('html', () => {
           <div></div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should ignore elements that are part of a false conditional expressions.',
+        theSubject: 'Should ignore elements that are part of a false conditional expressions.',
         template: () => html`
           <div>
             ${ false && html`<h1>You will not see me!</h1>`}
@@ -108,9 +107,9 @@ describe('html', () => {
           <div></div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should not ignore elements that are part of a true conditional expressions.',
+        theSubject: 'Should not ignore elements that are part of a true conditional expressions.',
         template: () => html`
           <div>
             ${ true && html`<h1>You will see me!</h1>`}
@@ -122,9 +121,9 @@ describe('html', () => {
           </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse template expressions.',
+        theSubject: 'Should parse template expressions.',
         template: () => html`
           <section>
             ${html`<h1>Nested Header!</h1>`}
@@ -141,7 +140,7 @@ describe('html', () => {
       
       // TODO reword/rework this test
       {
-        theFunction: 'Should parse template expressions with malformed html.',
+        theSubject: 'Should parse template expressions with malformed html.',
         template: () => html`
           <main>
             <div class= "stuff" ${html`<p>test</p>`}
@@ -154,9 +153,9 @@ describe('html', () => {
           </main>
         `,
       },
-  
+      
       {
-        theFunction: 'Should ignore invalid objects.',
+        theSubject: 'Should ignore invalid objects.',
         template: () => html`
           <section>
             ${html`<h1>Some Header!</h1>`}
@@ -169,9 +168,9 @@ describe('html', () => {
           </section>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse an array of template expressions.',
+        theSubject: 'Should parse an array of template expressions.',
         template: () => html`
           <ul>
             ${['one', 'two', 'three'].map(x => html`<li>${x}</li>`)}
@@ -185,9 +184,9 @@ describe('html', () => {
           </ul>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse an array of string expressions.',
+        theSubject: 'Should parse an array of string expressions.',
         template: () => html`
           <p>
             ${['Hello ', 'there ', ':)']}
@@ -201,7 +200,7 @@ describe('html', () => {
       },
   
       {
-        theFunction: 'Should parse an array of mixed type expressions.',
+        theSubject: 'Should parse an array of mixed type expressions.',
         template: () => html`
           <div>
             ${['Hello ', ['there every ', 1], html`<p class="bold">I like turtles.</p>`]}
@@ -214,9 +213,9 @@ describe('html', () => {
           </div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse attributes.',
+        theSubject: 'Should parse attributes.',
         template: () => html`
           <div class='test-class' id='my-id'>Test Content</div>
         `,
@@ -224,9 +223,9 @@ describe('html', () => {
           <div class="test-class" id="my-id">Test Content</div>
         `,
       },
-  
+      
       {
-        theFunction: 'Should parse attributes that have expressions.',
+        theSubject: 'Should parse attributes that have expressions.',
         template: () => html`
           <div class='some-class-${2 + 10}' id="${'my-id-from-expression'}">Test Content</div>
         `,
@@ -234,9 +233,89 @@ describe('html', () => {
           <div class="some-class-12" id="my-id-from-expression">Test Content</div>
         `,
       },
+
+      {
+        theSubject: 'Should parse attributes with an implicit true value.',
+        template: () => html`
+          <option value='test' selected />
+        `,
+        expected: `
+          <option value='test' selected />
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attributes with an explicit true value.',
+        template: () => html`
+          <option value='test' selected="true"/>
+        `,
+        expected: `
+          <option value='test' selected="true" />
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attributes with a true expression.',
+        template: () => html`
+          <option value='test' selected=${true} />
+        `,
+        expected: `
+          <option value='test' selected />
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attributes with an explicit false value.',
+        template: () => html`
+          <option value='test' selected='false'/>
+        `,
+        expected: `
+          <option value='test' selected="false" />
+        `,
+      },
+
+      {
+        theSubject: 'Should remove attributes with a false expression.',
+        template: () => html`
+          <option value='test' selected=${false} />
+        `,
+        expected: `
+          <option value='test' />
+        `,
+      },
+
+      {
+        theSubject: 'Should remove attributes with an undefined expression.',
+        template: () => html`
+          <option value='test' selected=${undefined} />
+        `,
+        expected: `
+          <option value='test' />
+        `,
+      },
+
+      {
+        theSubject: 'Should remove attributes with a null expression.',
+        template: () => html`
+          <option value='test' selected=${null} />
+        `,
+        expected: `
+          <option value='test' />
+        `,
+      },
+
+      {
+        theSubject: 'Should ignore attributes with a function that is not a valid event handler.',
+        template: () => html`
+          <button onawesome=${() => null} style=${() => null} />
+        `,
+        expected: `
+          <button />
+        `,
+      },
   
       {
-        theFunction: 'Should sanitize template expressions to prevent html injection.',
+        theSubject: 'Should sanitize template expressions to prevent html injection.',
         template: () => html`
           <div>
             <h1>Do Not Get Hacked!!!</h1>
@@ -252,15 +331,7 @@ describe('html', () => {
       },
 
       {
-        theFunction: 'Should parse attribute name spaces.',
-        template: () => html`<svg xmlns="http://www.w3.org/2000/svg" xmlns:test="http://www.example.com/test" width="40" height="40"></svg>`,
-        expected: `
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:test="http://www.example.com/test" width="40" height="40"></svg>
-        `,
-      },
-
-      {
-        theFunction: 'Should parse inline styles.',
+        theSubject: 'Should parse inline styles.',
         template: () => html`<div style="color:red;"></div>`,
         expected: `
           <div style="color:red;"></div>
@@ -269,8 +340,8 @@ describe('html', () => {
     ]
     
     testCases.forEach(
-      ({ theFunction, template, expected }) => {
-        it(theFunction, () => {
+      ({ theSubject, template, expected }) => {
+        it(theSubject, () => {
           document.body.appendChild(template())
   
           expect(format(document.body.innerHTML)).toBe(format(expected))
@@ -298,31 +369,52 @@ describe('html', () => {
   })
 
   describe('Error Handling.', () => {
-    // malformed attributes test
-    it('Should throw an error if closing and opening tags do not match.', () => {    
-      expect(() => html`<div><h1></div></h1>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
-    })
+    // TODO add malformed attributes tests and malformed tag tests.
+    const testCases = [
+      {
+        theSubject: 'Should throw an error if closing and opening tags do not match.',
+        template: () => html`<div><h1></div></h1>`,
+        expected: 'Error evaluating tag: </div>.  Closing tag does not match the open tag.',
+      },
+      {
+        // TODO this feature will be supported in the future.
+        theSubject: 'Should throw an error if there is more than one root element.',
+        template: () => html`<div></div><h1></h1>`,
+        expected: 'The template should have a single root node.',
+      },
+      {
+        theSubject: 'Should throw an error if there are unclosed tags.',
+        template: () => html`<main><div><h1></main>`,
+        expected: 'Error evaluating tag: </main>.  Closing tag does not match the open tag.',
+      },
+      {
+        theSubject: 'Should throw an error if there is a closing tag with no open tag.',
+        template: () => html`</main><h1></h1>`,
+        expected: 'Error evaluating tag: </main>.  Closing tag does not match the open tag.',
+      },
+      {
+        theSubject: 'Should throw an error if there is no tag name.',
+        template: () => html`<></>`,
+        expected: 'Error evaluating tag: <>.  There is no tag name.',
+      },
+      {
+        theSubject: 'Should throw an error there is an invalid tag name.',
+        template: () => html`<@!></@!>`,
+        expected: '',
+      },
+      {
+        theSubject: 'Should throw an error if no nodes are generated.',
+        template: () => html``,
+        expected: 'The template should have a single root node.',
+      },
+    ]
 
-    // TODO this feature will be supported in the future.
-    it('Should throw an error if there is more than one root element.', () => {    
-      expect(() => html`<div></div><h1></h1>`).toThrowError('It is broke!!')
-    })
-
-    it('Should throw an error if there are unclosed tags.', () => {    
-      expect(() => html`<main><div><h1></main>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
-    })
-
-    it('Should throw an error if there are unclosed tags.', () => {    
-      expect(() => html`<main><div><h1></main>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
-    })
-
-    it('Should throw an error if there is a closing tag with no open tag.', () => {    
-      expect(() => html`</main><h1></h1>`).toThrowError('Invalid HTML: There is a mismatch between opening and closing tags.')
-    })
-
-    // TODO rethink this a template might be empty it relies on a conditional statement.
-    it('Should throw an error if no nodes are generated.', () => {    
-      expect(() => html``).toThrowError('It is broke!!')
-    })
+    testCases.forEach(
+      ({ theSubject, template, expected }) => {
+        it(theSubject, () => {
+          expect(() => template()).toThrowError(expected)
+        })
+      },
+    )
   })
 })

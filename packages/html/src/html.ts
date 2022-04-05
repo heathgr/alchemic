@@ -1,75 +1,82 @@
 import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
-import { TemplateParser, TemplateTagMatcherGroups, TemplateExpression } from './html.types'
+import { TemplateParser, TemplateExpression } from './html.types'
 
-// TODO support comments
-// TODO support null attribute values
-// TODO support namespaced attributes
+// TODO figure out support for namespaced attributes and elements
 const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const elementStack: { element: HTMLElement, isClosed: boolean }[] = []
   let eventStack: { event: EventType, handler: (...args: any) => any }[] = []
-  let activeString = ''
+  let evaluationString = ''
   let activeElement = -1
+  let isEvaluatingTagFragment: RegExpMatchArray | null = null
 
-  const parseAttributes = (attributes: string) => {
-    // TODO make attribute name matcher adhere to HTML5 standard
-    // TODO better support for boolean attributes
-    const attributeNameMatch = attributes.match(/(?<fullMatch>^ *(?<name>[-a-zA-z0-9:]+) *)/)
-    const attributeValueMatch = attributes.match(/(?<fullMatch> *= *(?<opening>['"])(?<value>[^=]*)\k<opening>)/)
-    const name = attributeNameMatch?.groups?.name
-    const value = attributeValueMatch?.groups?.value
-  
-    if (name) elementStack[activeElement].element.setAttribute(name, value || name)
-    else return
-  
-    const theRest = attributes.substring(
-      (attributeNameMatch?.groups?.fullMatch?.length || 0) + (attributeValueMatch?.groups?.fullMatch?.length || 0),
-    )
-    
-    parseAttributes(theRest)
+  const parseAttributes = (attributes: string[]) => {
+    for (let i = 0; i < attributes.length; i++) {
+      const [name, rawValue] = attributes[i].split(/=/)
+      const value = rawValue?.replace(/["']/g, '') || ''
+
+      elementStack[activeElement].element.setAttribute(name, value || '')
+    }
+  }
+
+  const handleFalsyAttributeExpression = (expression: any) => {
+    if (isEvaluatingTagFragment && !expression) evaluationString = evaluationString.replace(/ [^\s]*$/, '')
   }
 
   const parseExpression = (expression: TemplateExpression) => {
     switch (typeof expression) {
       case 'string': {
-        activeString += sanitizeHtmlExpression(expression)
+        evaluationString += sanitizeHtmlExpression(expression)
         return
       }
       case 'number': {
-        activeString += expression
+        evaluationString += expression
         return
       }
       case 'object': {
         if (expression instanceof HTMLElement) {
-          if (activeString) {
-            elementStack[activeElement].element.appendChild(document.createTextNode(activeString))
-            activeString = ''
+          if (evaluationString) {
+            elementStack[activeElement].element.appendChild(document.createTextNode(evaluationString))
+            evaluationString = ''
           }
           elementStack[elementStack.length - 1].element.appendChild(expression)
+          return
         }
 
         if (Array.isArray(expression)) {
           for (let i = 0; i < expression.length; i++) {
             parseExpression(expression[i])
           }
+          return
         }
+
+        handleFalsyAttributeExpression(expression)
   
         return
       }
       case 'function': {
-        const eventHandlerMatch = activeString.match(/(?<event>on[a-z]+) *= *$/)
-
+        const eventHandlerMatch = evaluationString.match(/(?<event>on[a-z]+) *= *$/)
+        
         if (eventHandlerMatch) {
           const event = eventHandlerMatch.groups?.event as EventType
           
           if (isEvent(event)) {
             eventStack.push({ event, handler: expression })
-            activeString = activeString.substring(0, eventHandlerMatch.index)
+            evaluationString = evaluationString.substring(0, eventHandlerMatch.index)
+            return
           }
         }
 
+        evaluationString = evaluationString.replace(/ [^\s]*$/, '')
         return
       }
-      default: return
+      case 'boolean': {
+        handleFalsyAttributeExpression(expression)
+        return
+      }
+      default: {
+        handleFalsyAttributeExpression(expression)
+        return
+      }
     }
   }
 
@@ -90,46 +97,56 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   }
 
   const parseElements = () => {
-    const tagMatch = activeString.match(/(?<fullMatch><(?<closing>\/?) *(?<tagName>\w*) *(?<attributes>[/:;.()a-zA-Z0-9 ="'-]*) *\/?>)/)
+    const tagMatch = evaluationString.match(/(?<fullMatch><(?<inner>[^<>]*)>)/)
     
+    // TODO support comments
     if (tagMatch) {
-      const { fullMatch, tagName, closing, attributes } = tagMatch.groups as TemplateTagMatcherGroups
+      const { fullMatch, inner } = tagMatch.groups as any
       const matchIndex = tagMatch.index || 0
-      const preMatchString = activeString.substring(0, matchIndex).trim()
-      const postMatchString = activeString.substring(matchIndex + fullMatch.length)
-      
+      let content = inner as string
+      const isClosing = content.match(/^ *\/ */)
+      const isSelfClosing = content.match(/ *\/ *$/)
+      const preMatchString = evaluationString.substring(0, matchIndex).trim()
+      const postMatchString = evaluationString.substring(matchIndex + fullMatch.length)
+
       if (preMatchString) elementStack[activeElement].element.appendChild(document.createTextNode(preMatchString))
+      if (isClosing) content = content.replace(/^ *\/ */, '')
+      if (isSelfClosing) content = content.replace(/ *\/ *$/, '')
+
+      const [tagName, ...rawAttributes] = content.split(/ +/)
+      const attributes = rawAttributes.filter(a => a)
       
-      if (closing) {
-        if (tagName?.toLowerCase() !== elementStack[activeElement]?.element?.tagName?.toLowerCase())
-          throw new Error('Invalid HTML: There is a mismatch between opening and closing tags.')
-        handleClosingTag()
-      } else {
-        elementStack.push({ element: document.createElement(tagName as keyof HTMLElementTagNameMap), isClosed: false })
+      if (!tagName) throw new Error(`Error evaluating tag: ${fullMatch}.  There is no tag name.`)
+
+      if (!isClosing) {
+        const element = document.createElement(tagName) as HTMLElement
+
+        elementStack.push({ element, isClosed: false })
         activeElement = elementStack.length - 1
-  
-        if (attributes) parseAttributes(attributes)
-        if (fullMatch.match(/\/>$/)) {  //TODO see if self closing tag can be captured in regex capture group
-          handleClosingTag()
-        }
+        if (attributes.length > 0) parseAttributes(attributes)
+        if (isSelfClosing) handleClosingTag()
+      } else {
+        if (tagName?.toLocaleLowerCase() !== elementStack[activeElement]?.element?.tagName?.toLowerCase())
+          throw new Error(`Error evaluating tag: ${fullMatch}.  Closing tag does not match the open tag.`)
+        handleClosingTag()
       }
-      
-      activeString = postMatchString
+
+      evaluationString = postMatchString
       parseElements()
     }
-  
+    isEvaluatingTagFragment = evaluationString.match(/<[^>]*$/)
+
     return
   }
 
   for (let i = 0; i < templateStrings.length; i++) {
-    activeString += templateStrings[i]
+    evaluationString += templateStrings[i]
     parseElements()
     parseExpression(templateExpressions[i])
   }
 
   // TODO handle templates with no root element
-  // TODO write better error message
-  if (elementStack.length !== 1) throw new Error('It is broke!!')
+  if (elementStack.length !== 1) throw new Error('The template should have a single root node.')
   return elementStack[0].element
 }
 
