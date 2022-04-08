@@ -1,4 +1,5 @@
-import { isEvent, sanitizeHtmlExpression, EventType } from '@alchemic/utilities'
+import { isEvent, EventType } from '@alchemic/utilities'
+import sanitizeHtmlExpression from './sanitizeHtmlExpression'
 import { TemplateParser, TemplateExpression } from './html.types'
 
 // TODO figure out support for namespaced attributes and elements
@@ -12,7 +13,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const parseAttributes = (attributes: string[]) => {
     for (let i = 0; i < attributes.length; i++) {
       const [name, rawValue] = attributes[i].split(/=/)
-      const value = rawValue?.replace(/["']/g, '') || ''
+      const value = rawValue?.replace(/(^["'])|(["']$)/g, '') || ''
 
       elementStack[activeElement].element.setAttribute(name, value || '')
     }
@@ -66,7 +67,7 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
           }
         }
 
-        evaluationString = evaluationString.replace(/ [^\s]*$/, '')
+        evaluationString = evaluationString.replace(/\s[^\s]*$/, '')
         return
       }
       case 'boolean': {
@@ -97,24 +98,18 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   }
 
   const parseElements = () => {
-    const tagMatch = evaluationString.match(/(?<fullMatch><(?<inner>[^<>]*)>)/)
+    const tagMatch = evaluationString.match(/(?<fullMatch><\s*(?<isClosing>\/?)\s*(?<tagName>[\w:-]*)\s*(?<rawAttributes>((?!(\/>)|[<>])[\s\S])*)\s*(?<isSelfClosing>\/?)>)/)
     
     // TODO support comments
     if (tagMatch) {
-      const { fullMatch, inner } = tagMatch.groups as any
+      const { fullMatch, tagName, rawAttributes, isClosing, isSelfClosing } = tagMatch.groups as any
       const matchIndex = tagMatch.index || 0
-      let content = inner as string
-      const isClosing = content.match(/^ *\/ */)
-      const isSelfClosing = content.match(/ *\/ *$/)
       const preMatchString = evaluationString.substring(0, matchIndex).trim()
-      const postMatchString = evaluationString.substring(matchIndex + fullMatch.length)
+      const postMatchString = evaluationString.substring(matchIndex + (fullMatch?.length || 0))
 
       if (preMatchString) elementStack[activeElement].element.appendChild(document.createTextNode(preMatchString))
-      if (isClosing) content = content.replace(/^ *\/ */, '')
-      if (isSelfClosing) content = content.replace(/ *\/ *$/, '')
 
-      const [tagName, ...rawAttributes] = content.split(/ +/)
-      const attributes = rawAttributes.filter(a => a)
+      const attributes = rawAttributes.match(/[^"'=\s<>/]+(\s*=\s*(?<quote>["'])((?:\\\k<quote>|(?:(?!\k<quote>)).)*)(\k<quote>))?/g) || []
       
       if (!tagName) throw new Error(`Error evaluating tag: ${fullMatch}.  There is no tag name.`)
 

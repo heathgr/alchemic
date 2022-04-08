@@ -71,6 +71,12 @@ describe('html', () => {
       },
       
       {
+        theSubject: 'Should parse an input element.',
+        template: () => html`<input value="test value" />`,
+        expected: '<input value="test value"/>',
+      },
+
+      {
         theSubject: 'Should parse self closing tags.',
         template: () => html`
           <div>
@@ -135,22 +141,6 @@ describe('html', () => {
             <h1>Nested Header!</h1>
             <p>Nested Paragraph!</p>
           </section>
-        `,
-      },
-      
-      // TODO reword/rework this test
-      {
-        theSubject: 'Should parse template expressions with malformed html.',
-        template: () => html`
-          <main>
-            <div class= "stuff" ${html`<p>test</p>`}
-          </main>
-        `,
-        expected: `
-          <main>
-            &lt;div class= "stuff"
-            <p>test</p>
-          </main>
         `,
       },
       
@@ -221,6 +211,40 @@ describe('html', () => {
         `,
         expected: `
           <div class="test-class" id="my-id">Test Content</div>
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attributes with self closing tags.',
+        template: () => html`
+          <main>
+            <div class='test-class' id='my-id' xmlns='http://example.com/namespace'/>
+          </main>
+        `,
+        expected: `
+        <main>
+          <div class='test-class' id='my-id' xmlns='http://example.com/namespace'></div>
+        </main>
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attributes with escaped quotes.',
+        template: () => html`
+          <input value="I like \\"quoted words\\"" />
+        `,
+        expected: `
+          <input value="I like \\&quot;quoted words\\&quot;">
+        `,
+      },
+
+      {
+        theSubject: 'Should parse attribute expressions with quotes.',
+        template: () => html`
+          <input value="${'I like \\"quoted words\\"'}" />
+        `,
+        expected: `
+          <input value="I like &quot;quoted words&quot;">
         `,
       },
       
@@ -305,6 +329,16 @@ describe('html', () => {
       },
 
       {
+        theSubject: 'Should parse selected attributes',
+        template: () =>html`
+        <select><option>1</option><option selected>2</option></select>
+      `, 
+        expected: `
+          <select><option>1</option><option selected>2</option></select>
+        `,
+      },
+
+      {
         theSubject: 'Should ignore attributes with a function that is not a valid event handler.',
         template: () => html`
           <button onawesome=${() => null} style=${() => null} />
@@ -325,7 +359,7 @@ describe('html', () => {
         expected: `
         <div>
           <h1>Do Not Get Hacked!!!</h1>
-          &amp;#60;img src&amp;#61;"x" onerror&amp;#61;"alert&amp;#40;'XSS Attack'&amp;#41;"&amp;#62;&amp;#60;/img&amp;#62;
+          &amp;#60;img src&amp;#61;&amp;quot;x&amp;quot; onerror&amp;#61;&amp;quot;alert&amp;#40;&amp;apos;XSS Attack&amp;apos;&amp;#41;&amp;quot;&amp;#62;&amp;#60;/img&amp;#62;
         </div>
         `,
       },
@@ -335,6 +369,18 @@ describe('html', () => {
         template: () => html`<div style="color:red;"></div>`,
         expected: `
           <div style="color:red;"></div>
+        `,
+      },
+
+      {
+        theSubject: 'Should parse tags that are declared on multiple lines.',
+        template: () => html`
+          <div
+            id="test-class"
+            style="color:red;"
+          >Content and stuff</div>`,
+        expected: `
+          <div id="test-class" style="color:red;">Content and stuff</div>
         `,
       },
     ]
@@ -369,7 +415,6 @@ describe('html', () => {
   })
 
   describe('Error Handling.', () => {
-    // TODO add malformed attributes tests and malformed tag tests.
     const testCases = [
       {
         theSubject: 'Should throw an error if closing and opening tags do not match.',

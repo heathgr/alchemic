@@ -4,7 +4,7 @@ import mutateNode from './mutateNode'
 
 describe('Diff tests.', () => {
   describe('root level nodes', () => {
-    it('Should replace a node.', () => {
+    it('Should replace an element.', () => {
       const a = html`<p>hello world</p>`
       const b = html`<div>hello world</div>`
   
@@ -13,7 +13,7 @@ describe('Diff tests.', () => {
       expect(b.outerHTML).toBe('<div>hello world</div>')
     })
   
-    xit('Should replace a component.', () => {})
+    xit('Should replace a comment?.', () => {})
   
     it('Should morph a node.', () => {
       const a = html`<p>hello world!</p>`
@@ -72,6 +72,16 @@ describe('Diff tests.', () => {
   
       expect(b.outerHTML).toBe('<main><p>hello you</p></main>')
     })
+
+    it('Should replace children that are a different node type.', () => {
+      const update = html`<section>'hello'</section>`
+      const existing = html`<section><div></div></section>`
+      const expected = update.outerHTML
+    
+      render(update, existing)
+          
+      expect(existing.outerHTML).toBe(expected)
+    })
   })
 
   describe('attributes', () => {
@@ -84,14 +94,13 @@ describe('Diff tests.', () => {
       expect(existing.hasAttribute('value')).toBe(false)
     })
 
-    // TODO enable when HTML parser supports null values
-    xit('Should set attributes to null.', () => {
+    it('Should set attributes to null.', () => {
       const existing = html`<input type="text" value="howdy" />`
       const update = html`<input type="text" value=${null} />`
 
       render(update, existing)
 
-      expect(existing.getAttribute('value')).toBe(null)
+      expect(existing.hasAttribute('value')).toBe(false)
     })
 
     it('Should modify attributes that already exists on update and existing.', () => {
@@ -112,19 +121,18 @@ describe('Diff tests.', () => {
       expect(existing.getAttribute('value')).toBe('hi')
     })
 
-    // TODO revisit boolean attribute tests
     const booleanAttributeTest = (testProperty: 'checked' | 'disabled') => {
       it(`Should add ${testProperty} to the existing node if it is on the update node.`, () => {
         const existing = html`<input type="checkbox" />`
-        const update = html`<input type="checkbox" ${testProperty}="${true}" />`
+        const update = html`<input type="checkbox" ${testProperty}=${true} />`
 
         render(update, existing)
 
-        expect(existing.getAttribute(testProperty)).toBeTruthy()
+        expect(existing.hasAttribute(testProperty)).toBeTruthy()
       })
 
       it(`Should remove ${testProperty} from the existing node if it is not on the update node.`, () => {
-        const existing = html`<input type="checkbox" ${testProperty}="${true}" />`
+        const existing = html`<input type="checkbox" ${testProperty}=${true} />`
         const update = html`<input type="checkbox"  />`
 
         render(update, existing)
@@ -133,21 +141,21 @@ describe('Diff tests.', () => {
       })
 
       it(`Should modify ${testProperty} on the existing node if it is also on the update node.`, () => {
-        const existing = html`<input type="checkbox" ${testProperty}="${false}" />`
-        const update = html`<input type="checkbox"  ${testProperty}="${true}"/>`
+        const existing = html`<input type="checkbox" ${testProperty}=${false} />`
+        const update = html`<input type="checkbox"  ${testProperty}=${true}/>`
 
         render(update, existing)
 
-        expect(existing.getAttribute(testProperty)).toBeTruthy()
+        expect(existing.hasAttribute(testProperty)).toBeTruthy()
       })
 
-      xit(`Should modify ${testProperty} on the existing node if it is also on the update node.`, () => {
-        const existing = html`<input type="checkbox" ${testProperty}="${true}" />`
-        const update = html`<input type="checkbox"  ${testProperty}="${false}"/>`
+      it(`Should modify ${testProperty} on the existing node if it is also on the update node.`, () => {
+        const existing = html`<input type="checkbox" ${testProperty}=${true} />`
+        const update = html`<input type="checkbox"  ${testProperty}=${false}/>`
 
         render(update, existing)
 
-        expect(existing.getAttribute(testProperty)).toBeFalsy()
+        expect(existing.hasAttribute(testProperty)).toBeFalsy()
       })
     }
 
@@ -194,13 +202,13 @@ describe('Diff tests.', () => {
       expect(existing.outerHTML).toBe('<select></select>')
     })
 
-    xit('Should add the selected attribute.', () => {
+    it('Should add the selected attribute.', () => {
       const existing = html`<select><option>1</option><option>2</option></select>`
       const update = html`<select><option>1</option><option selected>2</option></select>`
 
       render(update, existing)
 
-      expect(existing.outerHTML).toBe('<select><option>1</option><option selected>2</option></select>')
+      expect(existing.outerHTML).toBe(update.outerHTML)
     })
 
     it('Should add the selected attribute (xml style).', () => {
@@ -301,17 +309,6 @@ describe('Diff tests.', () => {
       expect(oldThird).toEqual(existing.children[3])
       expect(oldForth).toEqual(existing.children[4])
       expect(existing.outerHTML).toEqual(expected)
-    })
-
-    // TODO this test does not belong in this section because it does not deal with ids and reordering.
-    it('Should replace children that are a different node type.', () => {
-      const update = html`<section>'hello'</section>`
-      const existing = html`<section><div></div></section>`
-      const expected = update.outerHTML
-
-      render(update, existing)
-      
-      expect(existing.outerHTML).toBe(expected)
     })
 
     it('Should remove child nodes from existing nodes and use the id attribute to reorder.', () => {
