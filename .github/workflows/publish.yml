@@ -16,6 +16,7 @@ jobs:
       - run: echo "//registry.npmjs.org/:_authToken=\${NPM_AUTH_TOKEN}" > .npmrc
       - run: npm i
       - run: npm -ws i
+      - run: npm -ws run lint
       - run: npm -ws run build
       - run: npm -ws test
       - run: npm -ws publish --access public

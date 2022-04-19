@@ -11,18 +11,35 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
+  "ignorePatterns": ["lib"],
   "parserOptions": {
-    "project": "tsconfig.json"
+    "project": "tsconfig.json",
+    "createDefaultProgram": true
   },
   "rules": {
-    "@typescript-eslint/semi": ["error", "never"],
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-use-before-define": "off",
     "comma-dangle": ["error", "always-multiline"],
     "eol-last": ["error", "always"],
     "no-console": "warn",
     "no-multiple-empty-lines": ["error", {"max": 2, "maxEOF": 0 }],
     "quotes": ["error", "single"],
-    "semi": ["error", "never"]
+    "semi": "off",
+    "@typescript-eslint/semi": ["error", "never"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": ["variable", "function"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "ignoreRestSiblings": true,
+        "varsIgnorePattern": "^_"
+      }
+    ]
   }
 }
