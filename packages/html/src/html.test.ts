@@ -477,14 +477,45 @@ describe('html', () => {
         `,
       },
 
-      // {
-      //   theSubject: 'Should not break.',
-      //   template: () => html`
-      //     <div id=>Test content</div>`,
-      //   expected: `
-          
-      //   `,
-      // },
+      {
+        theSubject: 'Should attributes with expressions as names.',
+        template: () => html`
+          <input type="checkbox" ${'checked'}=${true} />
+        `,
+        expected: `
+          <input type="checkbox" checked />
+        `,
+      },
+
+      {
+        theSubject: 'Should attributes with expressions in names.',
+        template: () => html`
+          <input type="checkbox" che${'ck'}ed=${true} />
+        `,
+        expected: `
+          <input type="checkbox" checked />
+        `,
+      },
+
+      {
+        theSubject: 'Should attributes with expressions in names.',
+        template: () => html`
+          <input type="checkbox" che${'cked'}=${true} />
+        `,
+        expected: `
+          <input type="checkbox" checked />
+        `,
+      },
+
+      {
+        theSubject: 'Should attributes with expressions in names.',
+        template: () => html`
+          <input type="checkbox" ${'che'}cked=${true} />
+        `,
+        expected: `
+          <input type="checkbox" checked />
+        `,
+      },
     ]
     
     testCases.forEach(
@@ -521,44 +552,47 @@ describe('html', () => {
       {
         theSubject: 'Should throw an error if closing and opening tags do not match.',
         template: () => html`<div><h1></div></h1>`,
-        expected: 'Error evaluating tag: </div>.  Closing tag does not match the open tag.',
+        expected: 'Error evaluating closing tag: </div.  Closing tag does not match the open tag.',
       },
-      {
-        // TODO this feature will be supported in the future.
-        theSubject: 'Should throw an error if there is more than one root element.',
-        template: () => html`<div></div><h1></h1>`,
-        expected: 'The template should have a single root node.',
-      },
+      // {
+      //   // TODO this feature will be supported in the future.
+      //   theSubject: 'Should throw an error if there is more than one root element.',
+      //   template: () => html`<div></div><h1></h1>`,
+      //   expected: 'The template should have a single root node.',
+      // },
       {
         theSubject: 'Should throw an error if there are unclosed tags.',
         template: () => html`<main><div><h1></main>`,
-        expected: 'Error evaluating tag: </main>.  Closing tag does not match the open tag.',
+        expected: 'Error evaluating closing tag: </main.  Closing tag does not match the open tag.',
       },
       {
         theSubject: 'Should throw an error if there is a closing tag with no open tag.',
         template: () => html`</main><h1></h1>`,
-        expected: 'Error evaluating tag: </main>.  Closing tag does not match the open tag.',
+        expected: 'Error evaluating closing tag: </main.  Closing tag does not match the open tag.',
       },
-      {
-        theSubject: 'Should throw an error if there is no tag name.',
-        template: () => html`<></>`,
-        expected: 'Error evaluating tag: <>.  There is no tag name.',
-      },
+
+      // TODO ignore tag fragments
+      // {
+      //   theSubject: 'Should throw an error if there is no tag name.',
+      //   template: () => html`<></>`,
+      //   expected: 'Error evaluating tag: <>.  There is no tag name.',
+      // },
       {
         theSubject: 'Should throw an error there is an invalid tag name.',
         template: () => html`<@!></@!>`,
         expected: '',
       },
+      // TODO rethink this.  What if there is no node because it is conditionally rendered.
       {
         theSubject: 'Should throw an error if no nodes are generated.',
         template: () => html``,
-        expected: 'The template should have a single root node.',
+        expected: 'No nodes where generated.',
       },
     ]
 
     testCases.forEach(
       ({ theSubject, template, expected }) => {
-        xit(theSubject, () => {
+        it(theSubject, () => {
           expect(() => template()).toThrowError(expected)
         })
       },

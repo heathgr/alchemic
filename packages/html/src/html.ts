@@ -10,6 +10,8 @@ enum EvaluationMode {
 }
 
 // TODO figure out support for namespaced attributes and elements
+// TODO support comments
+// TODO only match regex on valid characters for tag names, attributes names, etc.
 const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const elements: { element: HTMLElement, isClosed: boolean }[] = []
   let evaluatingElement = -1
@@ -20,8 +22,6 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   let mode = EvaluationMode.TAG
 
   const splitTemplateSegmentOnMatch  = (match: RegExpMatchArray | null): [string, string] => {
-    if (!match || !match[0]) return ['', '']
-
     const splitIndex = (match?.index || 0)
     const pre = templateSegment.substring(0, splitIndex)
     const post = templateSegment.substring(splitIndex + match[0].length).trimStart()
@@ -39,7 +39,6 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
   const handleClosingTag = () => {
     elements[evaluatingElement].isClosed = true
     const parent = elements[evaluatingElement - 1]
-    // TODO make sure tag names match before closing
     if (evaluatingElement && parent && !parent.isClosed) {
       parent.element.appendChild(elements[evaluatingElement].element)
       elements.pop()
@@ -163,14 +162,14 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
       return
     }
 
-    const closeBracketMatch = templateSegment.match(/(\/?)>/) || []
+    const closeBracketMatch = templateSegment.match(/(\/?)>/)
 
-    if (closeBracketMatch[1]) {
-      handleClosingTag()
+    if (closeBracketMatch) {
+      if (closeBracketMatch[1]) handleClosingTag()
+
+      splitTemplateSegmentOnMatch(closeBracketMatch)
+      findTag()
     }
-
-    splitTemplateSegmentOnMatch(closeBracketMatch)
-    findTag()
   }
 
   const findTag = () => {
@@ -207,6 +206,10 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
       return
     }
 
+    if (isClosingTag && (tagName.toLocaleLowerCase() !== elements[evaluatingElement]?.element?.tagName.toLocaleLowerCase())) {
+      throw new Error(`Error evaluating closing tag: ${tagMatch[0]}.  Closing tag does not match the open tag.`)
+    }
+
     handleClosingTag()
     splitTemplateSegmentOnMatch(templateSegment.match(/^[^<>]*>/))
     findTag()
@@ -240,6 +243,8 @@ const html: TemplateParser = (templateStrings, ...templateExpressions) => {
     evaluateTemplateString()
     evaluateExpression(templateExpressions[i])
   }
+
+  if (elements.length === 0) throw new Error('No new nodes where generated.')
 
   return elements[0].element
 }
